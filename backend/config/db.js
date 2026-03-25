@@ -6,7 +6,13 @@ let pool;
 
 if (connectionString) {
   // Use connection string if provided (e.g., from Railway or Render)
-  pool = mysql.createPool(connectionString);
+  // Keep connectionLimit low for free-tier DB hosts (e.g., Filess.io allows max 5)
+  pool = mysql.createPool({
+    uri: connectionString,
+    waitForConnections: true,
+    connectionLimit: 3,
+    queueLimit: 0,
+  });
 } else {
   // Fall back to individual environment variables
   pool = mysql.createPool({
