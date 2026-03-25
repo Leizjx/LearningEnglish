@@ -1,74 +1,68 @@
-require('dotenv').config();
+﻿require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+const fs = require('fs');
+const path = require('path');
 
-// Initialize Express app
+// Init app
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Middleware
-app.use(cors());
+// ===== Middleware =====
+app.use(cors({
+  origin: process.env.FRONTEND_URL || '*'
+}));
 app.use(express.json());
 
-// Database connection
-const db = require('./config/db');
+// ===== Ensure upload folder exists =====
+const uploadDir = path.join(__dirname, 'uploads/profiles');
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+}
 
-// Routes
-const authRoutes = require('./routes/authRoutes');
-const userRoutes = require('./routes/userRoutes');
-const protectedRoutes = require('./routes/protectedRoutes');
-const quizRoutes = require('./routes/quizRoutes');
-const adminRoutes = require('./routes/adminRoutes');
-const vocabularyRoutes = require('./routes/vocabularyRoutes');
-const userProfileRoutes = require('./routes/userProfileRoutes');
-
-// Middleware for file upload
-const multer = require('multer');
-const path = require('path');
-
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, 'uploads/profiles/');
-  },
-  filename: function (req, file, cb) {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, 'profile-' + uniqueSuffix + path.extname(file.originalname));
-  }
-});
-
-const upload = multer({ storage: storage, limits: { fileSize: 5 * 1024 * 1024 } });
-
+// ===== Static files =====
 app.use('/uploads', express.static('uploads'));
 
-// Mount routes
-app.use('/api/auth', authRoutes);
-app.use('/api/user', userRoutes);
-app.use('/api/protected', protectedRoutes);
-app.use('/api/quizzes', quizRoutes);
-app.use('/api/admin', adminRoutes);
-app.use('/api/vocabularies', vocabularyRoutes);
-app.use('/api/users', userProfileRoutes);
+// ===== Database =====
+const db = require('./config/db');
 
-// Health check endpoint
+// Test DB connection (optional log)
+(async () => {
+  try {
+    const [rows] = await db.query('SELECT 1');
+    console.log('✅ Database connected successfully');
+  } catch (err) {
+    console.error('❌ Database connection error:', err.message);
+  }
+})();
+
+// ===== Routes =====
+app.use('/api/auth', require('./routes/authRoutes'));
+app.use('/api/user', require('./routes/userRoutes'));
+app.use('/api/protected', require('./routes/protectedRoutes'));
+app.use('/api/quizzes', require('./routes/quizRoutes'));
+app.use('/api/admin', require('./routes/adminRoutes'));
+app.use('/api/vocabularies', require('./routes/vocabularyRoutes'));
+app.use('/api/users', require('./routes/userProfileRoutes'));
+
+// ===== Health check =====
 app.get('/', (req, res) => {
-  res.json({ message: 'Express JWT Auth API is running' });
+  res.json({ message: '🚀 API is running successfully' });
 });
 
-// Global error handler
+// ===== Error handler =====
 app.use((err, req, res, next) => {
-  console.error('Unhandled error:', err);
-  res.status(500).json({ message: 'Internal server error' });
+  console.error('🔥 Server error:', err);
+  res.status(500).json({ message: 'Internal Server Error' });
 });
 
-// 404 handler
+// ===== 404 handler =====
 app.use((req, res) => {
   res.status(404).json({ message: 'Route not found' });
 });
 
-// Start server
+// ===== Start server =====
 app.listen(PORT, () => {
-  console.log(`✅ Server running on http://localhost:${PORT}`);
-  console.log(`📝 Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`✅ Server running on port ${PORT}`);
+  console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
 });
-
-module.exports = app;
