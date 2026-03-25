@@ -1,4 +1,4 @@
-﻿require('dotenv').config();
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const fs = require('fs');
@@ -25,16 +25,6 @@ app.use('/uploads', express.static('uploads'));
 
 // ===== Database =====
 const db = require('./config/db');
-
-// Test DB connection (optional log)
-(async () => {
-  try {
-    const [rows] = await db.query('SELECT 1');
-    console.log('✅ Database connected successfully');
-  } catch (err) {
-    console.error('❌ Database connection error:', err.message);
-  }
-})();
 
 // ===== Routes =====
 app.use('/api/auth', require('./routes/authRoutes'));

@@ -27,15 +27,5 @@ if (connectionString) {
   });
 }
 
-// Test database connection
-pool.getConnection((err, connection) => {
-  if (err) {
-    console.error('❌ Database connection error details:', err);
-  } else {
-    console.log('✅ MySQL database connected successfully');
-    connection.release();
-  }
-});
-
 // Export promise-based pool for async/await support
 module.exports = pool.promise();
