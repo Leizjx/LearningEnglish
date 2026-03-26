@@ -366,11 +366,58 @@ async function createCustomQuiz(title, description, vocabularies) {
   }
 }
 
+// Delete a quiz and all its related data
+async function deleteQuiz(quizId) {
+  const connection = await db.getConnection();
+  try {
+    await connection.beginTransaction();
+
+    // 1. Delete from user_answers (related to questions of this quiz)
+    await connection.query(
+      `DELETE ua FROM user_answers ua 
+       JOIN questions q ON ua.question_id = q.id 
+       WHERE q.quiz_id = ?`,
+      [quizId]
+    );
+
+    // 2. Delete from user_results
+    await connection.query('DELETE FROM user_results WHERE quiz_id = ?', [quizId]);
+
+    // 3. Delete from answers (related to questions of this quiz)
+    await connection.query(
+      `DELETE a FROM answers a 
+       JOIN questions q ON a.question_id = q.id 
+       WHERE q.quiz_id = ?`,
+      [quizId]
+    );
+
+    // 4. Delete questions
+    await connection.query('DELETE FROM questions WHERE quiz_id = ?', [quizId]);
+
+    // 5. Delete the quiz itself
+    const [result] = await connection.query('DELETE FROM quizzes WHERE id = ?', [quizId]);
+
+    if (result.affectedRows === 0) {
+      throw new Error('Quiz not found or already deleted');
+    }
+
+    await connection.commit();
+    return { success: true, message: 'Quiz deleted successfully' };
+  } catch (error) {
+    await connection.rollback();
+    console.error('Error deleting quiz:', error);
+    throw error;
+  } finally {
+    connection.release();
+  }
+}
+
 module.exports = {
   getAllQuizzes,
   getQuizWithQuestions,
   saveQuizAttempt,
   getUserQuizProgress,
   getAttemptDetails,
-  createCustomQuiz
+  createCustomQuiz,
+  deleteQuiz
 };

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getAllQuizzes, getUserQuizProgress } from '../services/quizService';
+import { getAllQuizzes, getUserQuizProgress, deleteQuiz } from '../services/quizService';
 import VocabularyBuilder from '../components/VocabularyBuilder';
 import '../pages/QuizzesPage.css';
 
@@ -15,6 +15,22 @@ const QuizzesPage = () => {
   useEffect(() => {
     loadQuizzesAndProgress();
   }, []);
+
+  const handleDeleteQuiz = async (id, title) => {
+    if (id === 9999) return; // Không cho xóa quiz hệ thống
+    if (window.confirm(`Bạn có chắc chắn muốn xóa quiz "${title}" này không?`)) {
+      try {
+        const res = await deleteQuiz(id);
+        if (res.success) {
+          alert('Xóa thành công!');
+          loadQuizzesAndProgress(); // Refresh list
+        }
+      } catch (err) {
+        console.error('Delete error:', err);
+        alert('Lỗi: ' + (err.response?.data?.message || err.message));
+      }
+    }
+  };
 
   const loadQuizzesAndProgress = async () => {
     try {
@@ -109,12 +125,26 @@ const QuizzesPage = () => {
               <div key={quiz.id} className="quiz-card">
                 <div className="quiz-header">
                   <h3>{quiz.title}</h3>
-                  <span 
-                    className="difficulty-badge" 
-                    style={{ backgroundColor: getDifficultyColor(quiz.difficulty) }}
-                  >
-                    {getDifficultyLabel(quiz.difficulty)}
-                  </span>
+                  <div className="quiz-header-actions">
+                    <span 
+                      className="difficulty-badge" 
+                      style={{ backgroundColor: getDifficultyColor(quiz.difficulty) }}
+                    >
+                      {getDifficultyLabel(quiz.difficulty)}
+                    </span>
+                    {quiz.id !== 9999 && (
+                      <button 
+                        className="btn-delete-quiz"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteQuiz(quiz.id, quiz.title);
+                        }}
+                        title="Xóa quiz"
+                      >
+                        🗑️
+                      </button>
+                    )}
+                  </div>
                 </div>
 
                 <p className="quiz-description">{quiz.description}</p>

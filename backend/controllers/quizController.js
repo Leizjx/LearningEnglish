@@ -119,11 +119,26 @@ async function getAttemptDetails(req, res) {
   }
 }
 
+// Delete Quiz
+async function deleteQuiz(req, res) {
+  try {
+    const { id } = req.params;
+    // Lưu ý: Trong thực tế nên kiểm tra xem quizId này có phải do user này tạo hay không
+    // Hiện tại table quizzes chưa có trường creator_id nên ta cho phép xóa nếu có token.
+    const result = await quizService.deleteQuiz(id);
+    res.json(result);
+  } catch (error) {
+    console.error('Error in deleteQuiz:', error);
+    res.status(500).json({ success: false, message: error.message || 'Lỗi khi xóa quiz' });
+  }
+}
+
 module.exports = {
   getAllQuizzes,
-  getQuiz,
+  getQuizWithQuestions: getQuiz, // Renamed getQuiz to getQuizWithQuestions as per the instruction's module.exports
   submitQuiz,
   getUserProgress,
   getAttemptDetails,
-  createCustomQuiz
+  createCustomQuiz,
+  deleteQuiz
 };

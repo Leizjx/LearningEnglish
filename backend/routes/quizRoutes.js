@@ -12,5 +12,6 @@ router.post('/custom', verifyToken, quizController.createCustomQuiz);
 router.post('/:id/submit', verifyToken, quizController.submitQuiz);
 router.get('/user/progress/all', verifyToken, quizController.getUserProgress);
 router.get('/attempt/:attemptId', verifyToken, quizController.getAttemptDetails);
+router.delete('/:id', verifyToken, quizController.deleteQuiz);
 
 module.exports = router;

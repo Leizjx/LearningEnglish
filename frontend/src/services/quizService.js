@@ -54,3 +54,14 @@ export const getAttemptDetails = async (attemptId) => {
     throw error;
   }
 };
+
+// Delete a quiz
+export const deleteQuiz = async (quizId) => {
+  try {
+    const response = await axiosInstance.delete(`/quizzes/${quizId}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error deleting quiz:', error);
+    throw error;
+  }
+};
