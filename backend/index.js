@@ -44,7 +44,7 @@ if (!fs.existsSync(uploadDir)) {
 }
 
 // ===== Static files =====
-app.use('/uploads', express.static('uploads', {
+app.use('/uploads', express.static(path.join(__dirname, 'uploads'), {
   maxAge: '7d', // Cache ảnh 7 ngày ở trình duyệt
 }));
 
