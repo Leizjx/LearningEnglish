@@ -1,4 +1,7 @@
 {
+  "scripts": {
+    "postinstall": "npm install --prefix backend"
+  },
   "dependencies": {
     "multer": "^2.1.1"
   }
