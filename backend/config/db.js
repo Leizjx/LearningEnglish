@@ -1,22 +1,29 @@
 const mysql = require('mysql2');
 
-// Ưu tiên dùng DATABASE_URL (Filess.io/Render) nếu có
+// Lấy connection string từ biến môi trường
 const connectionString = process.env.DATABASE_URL;
 let pool;
 
 if (connectionString) {
-  // Dùng connection string (Filess.io trên Render)
-  pool = mysql.createPool({
-    uri: connectionString,
-    waitForConnections: true,
-    connectionLimit: 3,   // Filess.io free tier: tối đa ~5 connections
-    queueLimit: 10,
-    ssl: { rejectUnauthorized: false }, // Cần cho kết nối qua internet
-    enableKeepAlive: true,
-    keepAliveInitialDelay: 0,
-  });
+  console.log('📦 Database: Using connection string (Filess.io/Render)');
+  
+  // mysql2 hỗ trợ truyền trực tiếp connection string làm đối số đầu tiên
+  // Để thêm các option khác (connectionLimit), ta có thể dán thêm vào query params của string 
+  // HOẶC dùng object config. Ở đây ta dùng string để đảm bảo format chuẩn nhất.
+  
+  // Đảm bảo có SSL nếu là kết nối cloud (Filess.io)
+  let finalUri = connectionString;
+  if (!finalUri.includes('ssl=')) {
+    const separator = finalUri.includes('?') ? '&' : '?';
+    finalUri += `${separator}ssl={"rejectUnauthorized":false}`;
+  }
+
+  pool = mysql.createPool(finalUri);
+  
+  // Cấu hình pool sau khi khởi tạo (nếu dùng pool.pool)
+  // Thực tế mysql.createPool(string) sẽ tự parse các params như connectionLimit từ URI
 } else {
-  // Fallback: dùng biến riêng lẻ (local development)
+  console.log('🏠 Database: Using local configuration');
   pool = mysql.createPool({
     host: process.env.DB_HOST || 'localhost',
     port: process.env.DB_PORT ? Number(process.env.DB_PORT) : 3306,
@@ -31,5 +38,5 @@ if (connectionString) {
   });
 }
 
-// Export promise-based pool cho async/await
+// Export promise-based pool
 module.exports = pool.promise();
