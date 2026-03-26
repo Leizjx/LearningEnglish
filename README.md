@@ -75,4 +75,4 @@ npm start
 
 ---
 
-*Phát triển bởi USER & Antigravity AI.*
+*Phát triển bởi Ngọc Phúc Coder.*
