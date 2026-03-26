@@ -1,31 +1,35 @@
 const mysql = require('mysql2');
 
-// Determine database connection configuration
-const connectionString = process.env.DATABASE_URL || process.env.MYSQL_PUBLIC_URL;
+// Ưu tiên dùng DATABASE_URL (Filess.io/Render) nếu có
+const connectionString = process.env.DATABASE_URL;
 let pool;
 
 if (connectionString) {
-  // Use connection string if provided (e.g., from Railway or Render)
-  // Keep connectionLimit low for free-tier DB hosts (e.g., Filess.io allows max 5)
+  // Dùng connection string (Filess.io trên Render)
   pool = mysql.createPool({
     uri: connectionString,
     waitForConnections: true,
-    connectionLimit: 3,
-    queueLimit: 0,
+    connectionLimit: 3,   // Filess.io free tier: tối đa ~5 connections
+    queueLimit: 10,
+    ssl: { rejectUnauthorized: false }, // Cần cho kết nối qua internet
+    enableKeepAlive: true,
+    keepAliveInitialDelay: 0,
   });
 } else {
-  // Fall back to individual environment variables
+  // Fallback: dùng biến riêng lẻ (local development)
   pool = mysql.createPool({
-    host: process.env.DB_HOST || process.env.MYSQLHOST || 'localhost',
-    port: process.env.DB_PORT ? Number(process.env.DB_PORT) : (process.env.MYSQLPORT ? Number(process.env.MYSQLPORT) : 3306),
-    user: process.env.DB_USER || process.env.MYSQLUSER || 'root',
-    password: process.env.DB_PASSWORD || process.env.MYSQLPASSWORD || '',
-    database: process.env.DB_DATABASE || process.env.MYSQL_DATABASE || process.env.MYSQLDATABASE || 'english_app',
+    host: process.env.DB_HOST || 'localhost',
+    port: process.env.DB_PORT ? Number(process.env.DB_PORT) : 3306,
+    user: process.env.DB_USER || 'root',
+    password: process.env.DB_PASSWORD || '',
+    database: process.env.DB_DATABASE || 'english_app',
     waitForConnections: true,
-    connectionLimit: process.env.DB_CONNECTION_LIMIT ? Number(process.env.DB_CONNECTION_LIMIT) : 10,
-    queueLimit: 0,
+    connectionLimit: process.env.DB_CONNECTION_LIMIT ? Number(process.env.DB_CONNECTION_LIMIT) : 3,
+    queueLimit: 10,
+    enableKeepAlive: true,
+    keepAliveInitialDelay: 0,
   });
 }
 
-// Export promise-based pool for async/await support
+// Export promise-based pool cho async/await
 module.exports = pool.promise();

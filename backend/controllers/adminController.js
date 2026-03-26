@@ -8,7 +8,7 @@ const authService = require('../services/authService');
 async function getAllUsers(req, res) {
   try {
     const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'admin123@gmail.com';
-    const BASE_URL = process.env.BASE_URL || 'http://localhost:5000';
+    const BASE_URL = process.env.BACKEND_URL || process.env.BASE_URL || 'http://localhost:5000';
     let users = [];
 
     try {

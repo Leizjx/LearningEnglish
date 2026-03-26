@@ -1,78 +1,72 @@
 import axios from 'axios';
 
 /**
- * Axios instance with base URL and JWT token interceptor
- * Automatically attaches JWT token from localStorage to every request
+ * Axios instance với base URL và JWT token interceptor
+ * Tự động gắn JWT token từ localStorage vào mỗi request
  */
 
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 
-// Create axios instance with base URL
+// Tạo axios instance
 const axiosInstance = axios.create({
   baseURL: API_BASE_URL,
-  timeout: 10000, // 10 seconds timeout
+  timeout: 30000, // 30s — đủ để handle Render cold start (~15-30s)
 });
 
 /**
- * Request interceptor
- * Automatically adds JWT token to Authorization header
+ * Request interceptor — gắn JWT token vào header Authorization
  */
 axiosInstance.interceptors.request.use(
   (config) => {
-    // Get token from localStorage
     const token = localStorage.getItem('accessToken');
-
-    // Attach token to Authorization header if it exists
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
-
     return config;
   },
   (error) => {
-    // Handle request errors
     console.error('Request error:', error);
     return Promise.reject(error);
   }
 );
 
 /**
- * Response interceptor
- * Handles common response scenarios
+ * Response interceptor — xử lý lỗi + tự retry 1 lần nếu timeout
  */
 axiosInstance.interceptors.response.use(
-  (response) => {
-    // Return successful response
-    return response;
-  },
-  (error) => {
-    // Handle response errors
+  (response) => response,
+  async (error) => {
+    const config = error.config;
+
     if (error.response) {
-      // Server responded with error status
       const status = error.response.status;
 
-      // Handle 401 Unauthorized (token expired or invalid)
+      // 401: Token hết hạn hoặc không hợp lệ
       if (status === 401) {
         console.warn('Token expired or invalid. Clearing auth...');
         localStorage.removeItem('accessToken');
-        // Optionally redirect to login
+        // Redirect về login nếu muốn:
         // window.location.href = '/login';
       }
 
-      // Handle 403 Forbidden
       if (status === 403) {
         console.warn('Access forbidden.');
       }
 
-      // Handle 500 Server Error
       if (status === 500) {
         console.error('Server error:', error.response.data);
       }
-    } else if (error.request) {
-      // Request made but no response received
-      console.error('No response from server:', error.request);
+    } else if (error.code === 'ECONNABORTED' || error.message === 'Network Error') {
+      // Timeout hoặc network error → retry 1 lần duy nhất
+      if (!config._retried) {
+        config._retried = true;
+        console.warn('⚡ Request timeout/network error — retrying once...');
+        // Đợi 2s rồi thử lại (cho server thời gian wake up)
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+        return axiosInstance(config);
+      }
+      console.error('Request failed after retry:', error.message);
     } else {
-      // Error in request setup
       console.error('Error:', error.message);
     }
 
