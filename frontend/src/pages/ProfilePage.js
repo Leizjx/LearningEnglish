@@ -87,7 +87,7 @@ function ProfilePage() {
           <img 
             src={profile.profile_image ? (profile.profile_image.startsWith('http') ? profile.profile_image : `${API_BASE_URL}${profile.profile_image}`) : `${API_BASE_URL}/uploads/profiles/default-avatar.png`} 
             alt="Avatar" 
-            className="profile-avatar"
+            className="avatar-preview"
           />
         </div>
         <h1>👤 My Profile</h1>
