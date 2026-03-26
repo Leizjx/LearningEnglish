@@ -72,7 +72,6 @@ app.get('/api/health', async (req, res) => {
     console.log('--- Health Check: Testing DB Connection ---');
     console.log('DATABASE_URL present:', hasDbUrl);
     
-    // Thử truy vấn đơn giản
     const start = Date.now();
     await db.query('SELECT 1');
     const duration = Date.now() - start;
@@ -86,13 +85,21 @@ app.get('/api/health', async (req, res) => {
     });
   } catch (err) {
     console.error('❌ Health Check DB Error:', err);
+    
+    // Phân tích lỗi để gợi ý user
+    let hint = 'Check DATABASE_URL format and credentials.';
+    if (err.code === 'ER_CON_COUNT_ERROR' || err.message.includes('too many connections')) {
+      hint = 'QUÁ TẢI KẾT NỐI: Filess.io Free Tier chỉ cho phép 3 kết nối. Đảm bảo bạn đã tắt các tab Render Dashboard hoặc các bản chạy local cũ.';
+    } else if (err.code === 'ETIMEDOUT' || err.code === 'ECONNREFUSED') {
+      hint = 'LỖI KẾT NỐI: Filess.io không phản hồi. Kiểm tra whitelist IP (nếu có) hoặc xem server database có đang bảo trì không.';
+    }
+
     res.status(500).json({
       status: 'error',
       database: 'disconnected ❌',
-      has_env_url: hasDbUrl,
+      message: 'Server database không phản hồi hoặc quá tải.',
       error_code: err.code,
-      error_message: err.message || String(err),
-      hint: '1. Check DATABASE_URL name (must be ALL CAPS). 2. Check connections string format. 3. Ensure Filess.io host is reachable.',
+      hint: hint
     });
   }
 });

@@ -7,21 +7,20 @@ let pool;
 if (connectionString) {
   console.log('📦 Database: Using connection string (Filess.io/Render)');
   
-  // mysql2 hỗ trợ truyền trực tiếp connection string làm đối số đầu tiên
-  // Để thêm các option khác (connectionLimit), ta có thể dán thêm vào query params của string 
-  // HOẶC dùng object config. Ở đây ta dùng string để đảm bảo format chuẩn nhất.
-  
-  // Đảm bảo có SSL nếu là kết nối cloud (Filess.io)
+  // Đảm bảo có SSL và giới hạn kết nối cho Filess.io (Free tier giới hạn 3)
   let finalUri = connectionString;
   if (!finalUri.includes('ssl=')) {
     const separator = finalUri.includes('?') ? '&' : '?';
     finalUri += `${separator}ssl={"rejectUnauthorized":false}`;
   }
+  
+  // Ép giới hạn kết nối là 3 để tránh lỗi "Too many connections" trên Filess.io
+  if (!finalUri.includes('connectionLimit=')) {
+    const separator = finalUri.includes('?') ? '&' : '?';
+    finalUri += `${separator}connectionLimit=3`;
+  }
 
   pool = mysql.createPool(finalUri);
-  
-  // Cấu hình pool sau khi khởi tạo (nếu dùng pool.pool)
-  // Thực tế mysql.createPool(string) sẽ tự parse các params như connectionLimit từ URI
 } else {
   console.log('🏠 Database: Using local configuration');
   pool = mysql.createPool({
@@ -31,8 +30,8 @@ if (connectionString) {
     password: process.env.DB_PASSWORD || '',
     database: process.env.DB_DATABASE || 'english_app',
     waitForConnections: true,
-    connectionLimit: process.env.DB_CONNECTION_LIMIT ? Number(process.env.DB_CONNECTION_LIMIT) : 3,
-    queueLimit: 10,
+    connectionLimit: 3, // Đồng bộ với cloud để test local chuẩn hơn
+    queueLimit: 0,
     enableKeepAlive: true,
     keepAliveInitialDelay: 0,
   });
