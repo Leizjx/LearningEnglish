@@ -107,26 +107,29 @@ async function findUserByEmail(email) {
  * @returns {Promise<Object>} - Created user with id
  */
 async function createUser(email, hashedPassword, role = 'user') {
+  const defaultAvatar = '/uploads/profiles/default-avatar.png';
   try {
     const [result] = await db.query(
-      'INSERT INTO users (email, password, role) VALUES (?, ?, ?)',
-      [email.toLowerCase(), hashedPassword, role]
+      'INSERT INTO users (email, password, role, profile_image) VALUES (?, ?, ?, ?)',
+      [email.toLowerCase(), hashedPassword, role, defaultAvatar]
     );
     return {
       id: result.insertId,
       email: email.toLowerCase(),
-      role
+      role,
+      profile_image: defaultAvatar
     };
   } catch (error) {
     if (error.message.includes("Unknown column 'role'") || error.errno === 1054) {
       const [result] = await db.query(
-        'INSERT INTO users (email, password) VALUES (?, ?)',
-        [email.toLowerCase(), hashedPassword]
+        'INSERT INTO users (email, password, profile_image) VALUES (?, ?, ?)',
+        [email.toLowerCase(), hashedPassword, defaultAvatar]
       );
       return {
         id: result.insertId,
         email: email.toLowerCase(),
-        role
+        role,
+        profile_image: defaultAvatar
       };
     }
     throw new Error('Error creating user in database');

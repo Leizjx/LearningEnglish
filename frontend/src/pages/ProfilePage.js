@@ -4,6 +4,8 @@ import { useAuth } from "../context/AuthContext";
 import { getProfile, updateProfile } from "../services/userService";
 import "./ProfilePage.css";
 
+const API_BASE_URL = process.env.REACT_APP_API_URL?.replace('/api', '') || 'http://localhost:5000';
+
 function ProfilePage() {
   const [profile, setProfile] = useState({
     name: "",
@@ -81,6 +83,13 @@ function ProfilePage() {
   return (
     <div className="profile-container">
       <div className="profile-header">
+        <div className="avatar-section">
+          <img 
+            src={profile.profile_image ? (profile.profile_image.startsWith('http') ? profile.profile_image : `${API_BASE_URL}${profile.profile_image}`) : `${API_BASE_URL}/uploads/profiles/default-avatar.png`} 
+            alt="Avatar" 
+            className="profile-avatar"
+          />
+        </div>
         <h1>👤 My Profile</h1>
         <p>Update your personal information and profile picture</p>
       </div>

@@ -32,7 +32,7 @@ function DashboardPage() {
         {/* User Greeting Section */}
         <section className="user-greeting-section" style={{ display: 'flex', alignItems: 'center', gap: '20px', padding: '25px', background: '#fff', borderRadius: '16px', boxShadow: '0 4px 15px rgba(0,0,0,0.05)', marginBottom: '30px', flexWrap: 'wrap' }}>
           <img 
-            src={getAvatarUrl() || 'https://via.placeholder.com/80?text=Avatar'} 
+            src={getAvatarUrl() || `${API_BASE_URL}/uploads/profiles/default-avatar.png`} 
             alt="User Avatar" 
             style={{ width: '90px', height: '90px', borderRadius: '50%', objectFit: 'cover', border: '4px solid #74b9ff', boxShadow: '0 2px 10px rgba(0,0,0,0.1)' }}
           />
