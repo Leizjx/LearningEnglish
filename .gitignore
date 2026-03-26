@@ -25,6 +25,7 @@ Thumbs.db
 # ===== Uploads (ảnh người dùng, không cần push) =====
 backend/uploads/profiles/*
 !backend/uploads/profiles/.gitkeep
+!backend/uploads/profiles/default-avatar.png
 
 # ===== Misc =====
 .gemini/
