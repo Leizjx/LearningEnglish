@@ -135,7 +135,7 @@ async function deleteQuiz(req, res) {
 
 module.exports = {
   getAllQuizzes,
-  getQuizWithQuestions: getQuiz, // Renamed getQuiz to getQuizWithQuestions as per the instruction's module.exports
+  getQuiz,
   submitQuiz,
   getUserProgress,
   getAttemptDetails,
