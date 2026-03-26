@@ -61,20 +61,32 @@ app.get('/', (req, res) => {
 
 // ===== DB Health check — kiểm tra kết nối database =====
 app.get('/api/health', async (req, res) => {
+  const hasDbUrl = !!process.env.DATABASE_URL;
   try {
+    console.log('--- Health Check: Testing DB Connection ---');
+    console.log('DATABASE_URL present:', hasDbUrl);
+    
+    // Thử truy vấn đơn giản
+    const start = Date.now();
     await db.query('SELECT 1');
+    const duration = Date.now() - start;
+
     res.json({
       status: 'ok',
       database: 'connected ✅',
+      latency: `${duration}ms`,
       env: process.env.NODE_ENV,
-      db_mode: process.env.DATABASE_URL ? 'Filess.io (cloud)' : 'local fallback ⚠️',
+      db_mode: hasDbUrl ? 'Filess.io (cloud)' : 'local fallback ⚠️',
     });
   } catch (err) {
+    console.error('❌ Health Check DB Error:', err);
     res.status(500).json({
       status: 'error',
       database: 'disconnected ❌',
-      error: err.message,
-      hint: 'Hãy kiểm tra biến DATABASE_URL trên Render Dashboard',
+      has_env_url: hasDbUrl,
+      error_code: err.code,
+      error_message: err.message || String(err),
+      hint: '1. Check DATABASE_URL name (must be ALL CAPS). 2. Check connections string format. 3. Ensure Filess.io host is reachable.',
     });
   }
 });
