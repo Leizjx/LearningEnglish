@@ -59,6 +59,26 @@ app.get('/', (req, res) => {
   res.json({ message: '🚀 API is running successfully', env: process.env.NODE_ENV });
 });
 
+// ===== DB Health check — kiểm tra kết nối database =====
+app.get('/api/health', async (req, res) => {
+  try {
+    await db.query('SELECT 1');
+    res.json({
+      status: 'ok',
+      database: 'connected ✅',
+      env: process.env.NODE_ENV,
+      db_mode: process.env.DATABASE_URL ? 'Filess.io (cloud)' : 'local fallback ⚠️',
+    });
+  } catch (err) {
+    res.status(500).json({
+      status: 'error',
+      database: 'disconnected ❌',
+      error: err.message,
+      hint: 'Hãy kiểm tra biến DATABASE_URL trên Render Dashboard',
+    });
+  }
+});
+
 // ===== Error handler =====
 app.use((err, req, res, next) => {
   console.error('🔥 Server error:', err);
